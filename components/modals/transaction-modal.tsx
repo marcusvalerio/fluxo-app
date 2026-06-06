@@ -15,6 +15,7 @@ interface TransactionModalProps {
 export function TransactionModal({ isOpen, onClose, editingTransaction, prefilledDate }: TransactionModalProps) {
   const { incomeCategories, expenseCategories, addTransaction, updateTransaction } = useFinance()
   const [type, setType] = useState<"income" | "expense">("expense")
+  const [saving, setSaving] = useState(false)
   const [amount, setAmount] = useState("")
   const [desc, setDesc] = useState("")
   const [category, setCategory] = useState("")
@@ -43,12 +44,22 @@ export function TransactionModal({ isOpen, onClose, editingTransaction, prefille
     setAmount(num > 0 ? (num / 100).toFixed(2) : "")
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const amountNum = parseFloat(amount)
     if (!amountNum || amountNum <= 0 || !date) return
+    setSaving(true)
     const txData = { type, amount: amountNum, desc: desc || category || "Lançamento", category: category || "Outro", date }
-    if (editingTransaction) { updateTransaction(editingTransaction.id, txData) } else { addTransaction(txData) }
-    onClose()
+    try {
+      if (editingTransaction) {
+        await updateTransaction(editingTransaction.id, txData)
+      } else {
+        await addTransaction(txData)
+      }
+      onClose()
+    } catch (e) {
+      console.error("Erro ao salvar:", e)
+    }
+    setSaving(false)
   }
 
   const accentColor = type === "income" ? "#16a34a" : "#ED4B00"
@@ -164,11 +175,11 @@ export function TransactionModal({ isOpen, onClose, editingTransaction, prefille
               {/* Botão */}
               <motion.button
                 whileTap={{ scale: 0.97 }} onClick={handleSubmit}
-                disabled={!amount || parseFloat(amount) <= 0}
+                disabled={!amount || parseFloat(amount) <= 0 || saving}
                 className="w-full py-4 rounded-2xl font-bold text-white disabled:opacity-40"
                 style={{ background: accentColor }}
               >
-                {editingTransaction ? "Salvar alteração" : "Salvar lançamento"}
+                {saving ? "Salvando..." : editingTransaction ? "Salvar alteração" : "Salvar lançamento"}
               </motion.button>
             </div>
           </motion.div>

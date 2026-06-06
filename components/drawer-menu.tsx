@@ -1,10 +1,10 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Calendar, Receipt, BarChart2, ClipboardList, X } from "lucide-react"
+import { Calendar, Receipt, BarChart2, ClipboardList, X, Trophy } from "lucide-react"
 import { Logo } from "./logo"
 
-type Screen = "home" | "transactions" | "goals" | "calendar" | "bills" | "analytics" | "planning"
+import type { Screen } from "./bottom-nav"
 
 interface DrawerMenuProps {
   isOpen: boolean
@@ -18,6 +18,7 @@ const DRAWER_ITEMS = [
   { key: "analytics", label: "Análise", desc: "Visão detalhada dos seus gastos", icon: BarChart2 },
   { key: "calendar", label: "Reflexão", desc: "Gastos por dia do mês", icon: Calendar },
   { key: "bills", label: "Contas Fixas", desc: "Recorrências mensais", icon: Receipt },
+  { key: "achievements", label: "Medalhas", desc: "Suas conquistas financeiras", icon: Trophy },
 ]
 
 export function DrawerMenu({ isOpen, onClose, onNavigate, current }: DrawerMenuProps) {

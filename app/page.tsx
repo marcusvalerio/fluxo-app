@@ -22,8 +22,12 @@ import { GoalModal } from "@/components/modals/goal-modal"
 import { BillModal } from "@/components/modals/bill-modal"
 import { ConfirmDialog } from "@/components/modals/confirm-dialog"
 import { WalletDetector } from "@/components/wallet-detector"
+import { AchievementToast } from "@/components/achievement-toast"
+import { AchievementsScreen } from "@/components/screens/achievements-screen"
+import { checkNewAchievements, buildStats, type Achievement } from "@/lib/achievements"
+import { useEffect, useRef } from "react"
 
-type Screen = "home" | "transactions" | "goals" | "calendar" | "bills" | "analytics" | "planning"
+import type { Screen } from "@/components/bottom-nav"
 
 function AppContent() {
   const { state, loading, deleteTransaction } = useFinance()
@@ -39,6 +43,17 @@ function AppContent() {
   const [billModalOpen, setBillModalOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null)
+  const lastTxCount = useRef(state.transactions.length)
+
+  // Verificar conquistas quando transações mudam
+  useEffect(() => {
+    if (state.transactions.length <= lastTxCount.current) { lastTxCount.current = state.transactions.length; return }
+    lastTxCount.current = state.transactions.length
+    const stats = buildStats(state.transactions, state.goals, state.planning, state.monthlyIncome, state.limit)
+    const newOnes = checkNewAchievements(stats, state.achievements || [])
+    if (newOnes.length > 0) setNewAchievement(newOnes[0])
+  }, [state.transactions.length])
 
   if (loading) {
     return (
@@ -83,6 +98,7 @@ function AppContent() {
           {currentScreen === "bills" && <BillsScreen onOpenNewBill={() => setBillModalOpen(true)} />}
           {currentScreen === "analytics" && <AnalyticsScreen />}
           {currentScreen === "planning" && <PlanningScreen />}
+          {currentScreen === "achievements" && <AchievementsScreen />}
         </motion.div>
       </AnimatePresence>
 
@@ -90,6 +106,7 @@ function AppContent() {
       <DrawerMenu isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} onNavigate={setCurrentScreen} current={currentScreen} />
       {!hideFab && <FloatingActionButton onClick={() => handleOpenNewTransaction()} visible />}
       <WalletDetector onOpenTransaction={() => handleOpenNewTransaction()} />
+      <AchievementToast achievement={newAchievement} onDismiss={() => setNewAchievement(null)} />
 
       <TransactionModal isOpen={txModalOpen} onClose={() => { setTxModalOpen(false); setEditingTx(null); setPrefilledDate(null) }} editingTransaction={editingTx} prefilledDate={prefilledDate} />
       <LimitModal isOpen={limitModalOpen} onClose={() => setLimitModalOpen(false)} />

@@ -42,6 +42,11 @@ export interface MonthlyPlanning {
   expenses: PlanningItem[]
 }
 
+export interface EarnedAchievement {
+  id: string
+  earnedAt: string
+}
+
 export interface FinanceState {
   user: string
   monthlyIncome: number
@@ -51,6 +56,7 @@ export interface FinanceState {
   fixedBills: FixedBill[]
   planning: MonthlyPlanning[]
   onboarded: boolean
+  achievements: EarnedAchievement[]
 }
 
 const INCOME_CATEGORIES = ["Salário", "Freelance", "Projeto", "Venda", "Investimento", "Outro"]
@@ -94,7 +100,7 @@ interface FinanceContextType {
 
 const defaultState: FinanceState = {
   user: "", monthlyIncome: 0, limit: 0,
-  transactions: [], goals: [], fixedBills: [], planning: [], onboarded: false,
+  transactions: [], goals: [], fixedBills: [], planning: [], onboarded: false, achievements: [],
 }
 
 const FinanceContext = createContext<FinanceContextType | null>(null)
@@ -114,15 +120,26 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     if (!authUser) return
     setLoading(true)
     try {
-      const [profileRes, txRes, goalsRes, billsRes, planningRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", authUser.id).single(),
+      // Garantir que o perfil existe antes de carregar
+      let { data: profile, error: profileError } = await supabase
+        .from("profiles").select("*").eq("id", authUser.id).single()
+
+      // Se não existe, criar perfil vazio
+      if (profileError || !profile) {
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .upsert({ id: authUser.id, name: "", monthly_income: 0, spending_limit: 0, onboarded: false })
+          .select().single()
+        profile = newProfile
+      }
+
+      const [txRes, goalsRes, billsRes, planningRes] = await Promise.all([
         supabase.from("transactions").select("*").eq("user_id", authUser.id).order("date", { ascending: false }),
         supabase.from("goals").select("*").eq("user_id", authUser.id),
         supabase.from("fixed_bills").select("*").eq("user_id", authUser.id),
         supabase.from("planning").select("*").eq("user_id", authUser.id),
       ])
 
-      const profile = profileRes.data
       const transactions: Transaction[] = (txRes.data || []).map(t => ({
         id: t.id, type: t.type, amount: Number(t.amount),
         desc: t.desc, category: t.category, date: t.date,
@@ -143,18 +160,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         user: profile?.name || "",
         monthlyIncome: Number(profile?.monthly_income || 0),
         limit: Number(profile?.spending_limit || 0),
-        onboarded: profile?.onboarded || false,
+        onboarded: profile?.onboarded === true,
+        achievements: profile?.achievements || [],
         transactions, goals, fixedBills, planning,
       })
     } catch (e) {
       console.error("Erro ao carregar dados:", e)
+      // Mesmo com erro, parar o loading para não travar a tela
+      setState(prev => ({ ...prev, onboarded: false }))
     }
     setLoading(false)
   }
 
   const updateProfile = async (updates: Partial<{ name: string; monthly_income: number; spending_limit: number; onboarded: boolean }>) => {
     if (!authUser) return
-    await supabase.from("profiles").upsert({ id: authUser.id, ...updates })
+    const { error } = await supabase.from("profiles")
+      .update(updates)
+      .eq("id", authUser.id)
+    if (error) {
+      // Se update falhou, tentar upsert
+      await supabase.from("profiles").upsert({ id: authUser.id, ...updates })
+    }
   }
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id">) => {
