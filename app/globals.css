@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F2F3F4;
+  --foreground: #020035;
+  --midnight: #020035;
+  --kimchi: #ED4B00;
+  --royalty: #02066F;
+  --deepsea: #2000B1;
+  --lace: #EBEAED;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.card-premium {
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(2,0,53,0.08);
+  padding: 20px 24px;
+}
+
+.card-dark {
+  background: #020035;
+  border-radius: 20px;
+  padding: 20px 24px;
+  color: #FFFFFF;
+}
