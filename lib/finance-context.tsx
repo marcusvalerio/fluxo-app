@@ -96,6 +96,7 @@ interface FinanceContextType {
   getHealthScore: () => { score: number; saving: boolean; limitOk: boolean; hasGoal: boolean }
   getContextualMessage: () => string
   getEmergencyGoalSuggestion: () => number
+  saveAchievement: (id: string) => Promise<void>
 }
 
 const defaultState: FinanceState = {
@@ -346,6 +347,18 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     return avg > 0 ? avg * 3 : (state.monthlyIncome || 3000) * 3
   }, [getMonthStats, state.monthlyIncome])
 
+  const saveAchievement = useCallback(async (id: string) => {
+    if (!authUser) return
+    const already = state.achievements.find(a => a.id === id)
+    if (already) return
+    const newAchievement: EarnedAchievement = { id, earnedAt: new Date().toISOString() }
+    const updated = [...state.achievements, newAchievement]
+    setState(prev => ({ ...prev, achievements: updated }))
+    await supabase.from("profiles")
+      .update({ achievements: updated })
+      .eq("id", authUser.id)
+  }, [authUser, state.achievements])
+
   return (
     <FinanceContext.Provider value={{
       state, loading, incomeCategories: INCOME_CATEGORIES, expenseCategories: EXPENSE_CATEGORIES,
@@ -353,7 +366,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       addGoal, updateGoal, deleteGoal, addFixedBill, updateFixedBill, deleteFixedBill,
       toggleBillPaid, savePlanning, getCurrentPlanning, setUser, setMonthlyIncome, setLimit,
       completeOnboarding, getMonthTransactions, getMonthStats, getDayTransactions,
-      getHealthScore, getContextualMessage, getEmergencyGoalSuggestion,
+      getHealthScore, getContextualMessage, getEmergencyGoalSuggestion, saveAchievement,
     }}>
       {children}
     </FinanceContext.Provider>

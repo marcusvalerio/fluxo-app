@@ -30,7 +30,7 @@ import { useEffect, useRef } from "react"
 import type { Screen } from "@/components/bottom-nav"
 
 function AppContent() {
-  const { state, loading, deleteTransaction } = useFinance()
+  const { state, loading, deleteTransaction, saveAchievement } = useFinance()
   const { signOut } = useAuth()
   const [currentScreen, setCurrentScreen] = useState<Screen>("home")
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -46,14 +46,17 @@ function AppContent() {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null)
   const lastTxCount = useRef(state.transactions.length)
 
-  // Verificar conquistas quando transações mudam
+  // Verificar conquistas após qualquer mudança relevante
   useEffect(() => {
-    if (state.transactions.length <= lastTxCount.current) { lastTxCount.current = state.transactions.length; return }
-    lastTxCount.current = state.transactions.length
+    if (state.transactions.length === 0 && state.goals.length === 0) return
     const stats = buildStats(state.transactions, state.goals, state.planning, state.monthlyIncome, state.limit)
     const newOnes = checkNewAchievements(stats, state.achievements || [])
-    if (newOnes.length > 0) setNewAchievement(newOnes[0])
-  }, [state.transactions.length])
+    if (newOnes.length > 0) {
+      // Salvar primeira conquista nova e mostrar toast
+      saveAchievement(newOnes[0].id)
+      setNewAchievement(newOnes[0])
+    }
+  }, [state.transactions.length, state.goals.length, state.planning.length])
 
   if (loading) {
     return (
