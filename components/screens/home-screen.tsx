@@ -243,6 +243,7 @@ export function HomeScreen({ onOpenNewTransaction, onOpenLimitModal, onNavigate 
 
 /* ─── Greeting Header Component ─────────────────────────────────── */
 /* ─── Greeting Header ───────────────────────────────────────────── */
+/* ─── Greeting Header ───────────────────────────────────────────── */
 function GreetingHeader({ user, today }: { user: string; today: Date }) {
   const hour = today.getHours()
   const [visible, setVisible] = useState(false)
@@ -252,119 +253,34 @@ function GreetingHeader({ user, today }: { user: string; today: Date }) {
     return () => clearTimeout(t)
   }, [])
 
-  // Configuração por horário — sem emojis, só cor e forma
-  const timeConfig = hour >= 5 && hour < 12
-    ? { label: "Bom dia",   lightColor: "#FFD166", glowColor: "#FFB800", textColor: "#92400E", bgFrom: "#020035", bgTo: "#1a1060" }
-    : hour >= 12 && hour < 18
-    ? { label: "Boa tarde", lightColor: "#FF8C42", glowColor: "#ED4B00", textColor: "#9A3412", bgFrom: "#020035", bgTo: "#3D0A00" }
-    : { label: "Boa noite", lightColor: "#6B8CFF", glowColor: "#4F46E5", textColor: "#3730A3", bgFrom: "#020035", bgTo: "#0a0030" }
+  const label = hour >= 5 && hour < 12 ? "Bom dia"
+    : hour >= 12 && hour < 18 ? "Boa tarde"
+    : "Boa noite"
 
   const enter = (delay: number): React.CSSProperties => ({
     opacity: visible ? 1 : 0,
-    transform: visible ? "translateY(0px)" : "translateY(16px)",
-    filter: visible ? "blur(0px)" : "blur(8px)",
-    transition: `opacity 0.6s ${delay}s cubic-bezier(0.22,1,0.36,1), transform 0.6s ${delay}s cubic-bezier(0.22,1,0.36,1), filter 0.5s ${delay}s ease`,
+    transform: visible ? "translateY(0px)" : "translateY(14px)",
+    filter: visible ? "blur(0px)" : "blur(6px)",
+    transition: `opacity 0.55s ${delay}s cubic-bezier(0.22,1,0.36,1), transform 0.55s ${delay}s cubic-bezier(0.22,1,0.36,1), filter 0.5s ${delay}s ease`,
   })
 
   return (
-    <div
-      className="relative overflow-hidden px-6 pt-14 pb-7"
-      style={{
-        background: `linear-gradient(160deg, ${timeConfig.bgFrom} 0%, ${timeConfig.bgTo} 100%)`,
-        borderRadius: "0 0 32px 32px",
-      }}
-    >
-      {/* Luz de fundo — o "sol" */}
-      <div
-        style={{
-          position: "absolute",
-          top: -80,
-          right: -40,
-          width: 220,
-          height: 220,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${timeConfig.lightColor}55 0%, ${timeConfig.glowColor}22 45%, transparent 70%)`,
-          opacity: visible ? 1 : 0,
-          transition: "opacity 1.2s 0.1s ease",
-          pointerEvents: "none",
-        }}
-      />
-      {/* Raios de luz secundários */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "60%",
-          height: "100%",
-          background: `linear-gradient(to left, ${timeConfig.lightColor}18 0%, transparent 60%)`,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Card glass */}
-      <div
-        style={{
-          position: "absolute",
-          top: 16,
-          right: 16,
-          width: 80,
-          height: 80,
-          borderRadius: 24,
-          background: "rgba(255,255,255,0.07)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          opacity: visible ? 1 : 0,
-          transform: visible ? "scale(1) rotate(12deg)" : "scale(0.8) rotate(12deg)",
-          transition: "opacity 0.7s 0.2s ease, transform 0.7s 0.2s cubic-bezier(0.22,1,0.36,1)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 40,
-          right: 52,
-          width: 48,
-          height: 48,
-          borderRadius: 16,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          opacity: visible ? 1 : 0,
-          transform: visible ? "scale(1) rotate(-8deg)" : "scale(0.8) rotate(-8deg)",
-          transition: "opacity 0.7s 0.3s ease, transform 0.7s 0.3s cubic-bezier(0.22,1,0.36,1)",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Texto */}
-      <div className="relative z-10">
-        {/* Label horário — sem emoji, tipografia pura */}
+    <div className="px-6 pt-12 pb-5 flex items-start justify-between">
+      <div>
         <div style={enter(0)}>
-          <span
-            className="text-xs font-bold uppercase tracking-widest"
-            style={{ color: timeConfig.lightColor, letterSpacing: "0.12em" }}
-          >
-            {timeConfig.label}
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#ED4B00" }}>
+            {label}
           </span>
         </div>
-
-        {/* Nome */}
-        <h1
-          style={{ ...enter(0.1), color: "#FFFFFF", fontSize: "clamp(1.5rem, 6.5vw, 2rem)" }}
-          className="font-bold leading-tight mt-1"
-        >
+        <h1 style={{ ...enter(0.09), color: "#020035", fontSize: "clamp(1.4rem, 6vw, 1.75rem)" }} className="font-bold leading-tight mt-1">
           {user ? `Olá, ${user}.` : "Olá."}
         </h1>
-
-        {/* Data */}
-        <p
-          style={{ ...enter(0.19), color: "rgba(255,255,255,0.45)" }}
-          className="text-sm mt-1 capitalize"
-        >
+        <p style={{ ...enter(0.18), color: "rgba(2,0,53,0.45)" }} className="text-sm mt-0.5 capitalize">
           {today.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
         </p>
+      </div>
+      <div style={{ opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.85)", transition: "opacity 0.4s 0.3s ease, transform 0.4s 0.3s ease" }}>
+        <Logo size={32} showText={false} />
       </div>
     </div>
   )
