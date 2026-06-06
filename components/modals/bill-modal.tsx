@@ -44,7 +44,7 @@ export function BillModal({ isOpen, onClose }: BillModalProps) {
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed left-0 right-0 z-[301] rounded-t-3xl"
-            style={{ bottom: 0, background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}
+            style={{ bottom: 0, left: 0, right: 0, width: "100%", background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">

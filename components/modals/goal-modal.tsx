@@ -58,7 +58,7 @@ export function GoalModal({ isOpen, onClose, editingGoal }: GoalModalProps) {
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed left-0 right-0 z-[301] rounded-t-3xl"
-            style={{ bottom: 0, background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}
+            style={{ bottom: 0, left: 0, right: 0, width: "100%", background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}
           >
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full" style={{ background: "rgba(2,0,53,0.15)" }} />

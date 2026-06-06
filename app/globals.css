@@ -29,3 +29,15 @@ body {
   padding: 20px 24px;
   color: #FFFFFF;
 }
+
+/* Previne overflow horizontal em toda a aplicação */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Garante que modais e elementos fixed ocupem a largura certa */
+* {
+  box-sizing: border-box;
+}
