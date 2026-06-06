@@ -18,7 +18,7 @@ create table if not exists transactions (
   user_id uuid references auth.users on delete cascade not null,
   type text not null check (type in ('income', 'expense')),
   amount numeric(12,2) not null,
-  desc text not null default '',
+  description text not null default '',
   category text not null default 'Outro',
   date date not null,
   created_at timestamptz default now()

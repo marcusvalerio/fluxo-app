@@ -142,7 +142,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       const transactions: Transaction[] = (txRes.data || []).map(t => ({
         id: t.id, type: t.type, amount: Number(t.amount),
-        desc: t.desc, category: t.category, date: t.date,
+        desc: t.description, category: t.category, date: t.date,
       }))
       const goals: Goal[] = (goalsRes.data || []).map(g => ({
         id: g.id, name: g.name, total: Number(g.total),
@@ -187,7 +187,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     if (!authUser) return
     const { data } = await supabase.from("transactions").insert({
       user_id: authUser.id, type: tx.type, amount: tx.amount,
-      desc: tx.desc, category: tx.category, date: tx.date,
+      description: tx.desc, category: tx.category, date: tx.date,
     }).select().single()
     if (data) setState(prev => ({ ...prev, transactions: [{ ...tx, id: data.id }, ...prev.transactions] }))
   }, [authUser])
@@ -195,7 +195,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const updateTransaction = useCallback(async (id: number, tx: Partial<Transaction>) => {
     if (!authUser) return
     await supabase.from("transactions").update({
-      type: tx.type, amount: tx.amount, desc: tx.desc,
+      type: tx.type, amount: tx.amount, description: tx.desc,
       category: tx.category, date: tx.date,
     }).eq("id", id).eq("user_id", authUser.id)
     setState(prev => ({ ...prev, transactions: prev.transactions.map(t => t.id === id ? { ...t, ...tx } : t) }))
