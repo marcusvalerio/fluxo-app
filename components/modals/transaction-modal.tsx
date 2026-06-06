@@ -78,14 +78,14 @@ export function TransactionModal({ isOpen, onClose, editingTransaction, prefille
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0.5 }}
             transition={{ type: "spring", damping: 35, stiffness: 400 }}
-            className="fixed bottom-0 left-0 right-0 bg-card rounded-t-[2rem] border-t border-border z-[301] max-h-[92vh] overflow-y-auto safe-bottom"
+            style={{ bottom: 0, background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }} className="fixed left-0 right-0 z-[301] rounded-t-3xl"
           >
             {/* Decorative glow */}
             <div className={`absolute -top-20 left-1/2 -translate-x-1/2 w-60 h-20 rounded-full blur-3xl pointer-events-none ${
               type === "income" ? "bg-success/20" : "bg-destructive/20"
             }`} />
 
-            <div className="relative p-6 pb-8">
+            <div className="relative p-6 pb-8 overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: "touch" }}>
               {/* Handle */}
               <div className="w-10 h-1.5 bg-border rounded-full mx-auto mb-5" />
 

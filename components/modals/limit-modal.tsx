@@ -13,17 +13,16 @@ interface LimitModalProps {
 export function LimitModal({ isOpen, onClose }: LimitModalProps) {
   const { state, setLimit } = useFinance()
   const [value, setValue] = useState("")
+  const suggested = state.monthlyIncome > 0 ? Math.round(state.monthlyIncome * 0.7) : 0
 
   useEffect(() => {
-    if (isOpen) {
-      setValue(state.limit > 0 ? String(state.limit) : "")
-    }
+    if (isOpen) setValue(state.limit > 0 ? state.limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "")
   }, [isOpen, state.limit])
 
   const handleSubmit = () => {
-    const limitNum = parseFloat(value)
-    if (isNaN(limitNum) || limitNum < 0) return
-    setLimit(limitNum)
+    const num = parseFloat(value.replace(/\D/g, "")) / 100
+    if (isNaN(num) || num <= 0) return
+    setLimit(num)
     onClose()
   }
 
@@ -32,61 +31,60 @@ export function LimitModal({ isOpen, onClose }: LimitModalProps) {
       {isOpen && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[300]"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose} className="fixed inset-0 z-[300]"
+            style={{ background: "rgba(2,0,53,0.5)", backdropFilter: "blur(4px)" }}
           />
-
           <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-card rounded-t-3xl border-t border-border z-[301] safe-bottom"
+            className="fixed left-0 right-0 z-[301] rounded-t-3xl"
+            style={{ bottom: 0, background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }}
           >
-            <div className="p-6">
-              {/* Handle */}
-              <div className="w-9 h-1 bg-border rounded-full mx-auto mb-4" />
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full" style={{ background: "rgba(2,0,53,0.15)" }} />
+            </div>
+            <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
+              <h2 className="text-xl font-bold" style={{ color: "#020035" }}>Limite de gastos</h2>
+              <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(2,0,53,0.06)" }}>
+                <X className="w-4 h-4" style={{ color: "#020035" }} />
+              </button>
+            </div>
 
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-heading text-xl font-bold text-foreground">
-                  Limite Mensal
-                </h2>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-muted-foreground mb-6">
-                Defina um teto para suas despesas mensais e acompanhe o progresso.
+            <div className="overflow-y-auto flex-1 px-6 pb-8" style={{ WebkitOverflowScrolling: "touch" }}>
+              <p className="text-sm mb-4" style={{ color: "rgba(2,0,53,0.5)" }}>
+                Boa prática: comprometer no máximo 70% da renda com gastos.
               </p>
 
-              {/* Value Input */}
-              <div className="mb-6">
-                <label className="block text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                  Limite de gastos (R$)
-                </label>
+              <div className="mb-4">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(2,0,53,0.5)" }}>Novo limite (R$)</label>
                 <input
-                  type="number"
-                  inputMode="decimal"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  placeholder="Ex: 3000"
-                  className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-transparent"
+                  type="text" inputMode="numeric" value={value}
+                  onChange={e => {
+                    const digits = e.target.value.replace(/\D/g, "")
+                    const num = parseInt(digits || "0", 10)
+                    setValue((num / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))
+                  }}
+                  placeholder="0,00"
+                  className="w-full px-4 py-3 rounded-xl outline-none text-sm"
+                  style={{ background: "#F2F3F4", color: "#020035", border: "1.5px solid rgba(2,0,53,0.1)" }}
                 />
               </div>
 
-              {/* Submit */}
+              {suggested > 0 && (
+                <button
+                  onClick={() => setValue((suggested).toLocaleString("pt-BR", { minimumFractionDigits: 2 }))}
+                  className="text-sm font-medium mb-6 block"
+                  style={{ color: "#ED4B00" }}
+                >
+                  Usar sugestão: R$ {suggested.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </button>
+              )}
+
               <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSubmit}
-                className="w-full py-4 text-base font-medium text-primary-foreground bg-primary rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
+                whileTap={{ scale: 0.97 }} onClick={handleSubmit}
+                className="w-full py-4 rounded-2xl font-semibold text-white"
+                style={{ background: "#ED4B00" }}
               >
                 Salvar limite
               </motion.button>
