@@ -11,9 +11,10 @@ interface HomeScreenProps {
   onOpenNewTransaction: (date?: string) => void
   onOpenLimitModal: () => void
   onNavigate: (screen: "home" | "transactions" | "goals" | "calendar" | "bills" | "analytics" | "planning") => void
+  onSignOut: () => void
 }
 
-export function HomeScreen({ onOpenNewTransaction, onOpenLimitModal, onNavigate }: HomeScreenProps) {
+export function HomeScreen({ onOpenNewTransaction, onOpenLimitModal, onNavigate, onSignOut }: HomeScreenProps) {
   const { state, getMonthStats, getHealthScore, getContextualMessage } = useFinance()
   const stats = getMonthStats()
   const { score, saving, limitOk, hasGoal } = getHealthScore()
