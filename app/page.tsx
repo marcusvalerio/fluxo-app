@@ -19,6 +19,7 @@ import { LimitModal } from "@/components/modals/limit-modal"
 import { GoalModal } from "@/components/modals/goal-modal"
 import { BillModal } from "@/components/modals/bill-modal"
 import { ConfirmDialog } from "@/components/modals/confirm-dialog"
+import { WalletDetector } from "@/components/wallet-detector"
 
 type Screen = "home" | "transactions" | "goals" | "calendar" | "bills" | "analytics" | "planning"
 
@@ -139,6 +140,8 @@ function AppContent() {
       />
 
       <BillModal isOpen={billModalOpen} onClose={() => setBillModalOpen(false)} />
+
+      <WalletDetector onOpenTransaction={() => handleOpenNewTransaction()} />
 
       <ConfirmDialog
         isOpen={confirmOpen}
