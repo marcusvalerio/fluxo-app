@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useFinance, type Transaction } from "@/lib/finance-context"
-import { X, ArrowUpRight, ArrowDownRight, Sparkles, Calendar, Tag, FileText, Check } from "lucide-react"
+import { X, ArrowUpRight, ArrowDownRight, Check } from "lucide-react"
 
 interface TransactionModalProps {
   isOpen: boolean
@@ -14,254 +14,161 @@ interface TransactionModalProps {
 
 export function TransactionModal({ isOpen, onClose, editingTransaction, prefilledDate }: TransactionModalProps) {
   const { incomeCategories, expenseCategories, addTransaction, updateTransaction } = useFinance()
-  
-  const [type, setType] = useState<"income" | "expense">("income")
+  const [type, setType] = useState<"income" | "expense">("expense")
   const [amount, setAmount] = useState("")
   const [desc, setDesc] = useState("")
   const [category, setCategory] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
 
   useEffect(() => {
-    if (editingTransaction) {
-      setType(editingTransaction.type)
-      setAmount(String(editingTransaction.amount))
-      setDesc(editingTransaction.desc)
-      setCategory(editingTransaction.category)
-      setDate(editingTransaction.date)
-    } else {
-      setType("expense")
-      setAmount("")
-      setDesc("")
-      setCategory("")
-      setDate(prefilledDate || new Date().toISOString().split("T")[0])
+    if (isOpen) {
+      if (editingTransaction) {
+        setType(editingTransaction.type)
+        setAmount(String(editingTransaction.amount))
+        setDesc(editingTransaction.desc)
+        setCategory(editingTransaction.category)
+        setDate(editingTransaction.date)
+      } else {
+        setType("expense"); setAmount(""); setDesc(""); setCategory("")
+        setDate(prefilledDate || new Date().toISOString().split("T")[0])
+      }
     }
   }, [editingTransaction, prefilledDate, isOpen])
 
   const categories = type === "income" ? incomeCategories : expenseCategories
 
+  const handleAmount = (val: string) => {
+    const digits = val.replace(/\D/g, "")
+    const num = parseInt(digits || "0", 10)
+    setAmount(num > 0 ? (num / 100).toFixed(2) : "")
+  }
+
   const handleSubmit = () => {
     const amountNum = parseFloat(amount)
-    if (!amountNum || amountNum <= 0) return
-    if (!date) return
-
-    const txData = {
-      type,
-      amount: amountNum,
-      desc: desc || category || "Lancamento",
-      category: category || "Outro",
-      date,
-    }
-
-    if (editingTransaction) {
-      updateTransaction(editingTransaction.id, txData)
-    } else {
-      addTransaction(txData)
-    }
-
+    if (!amountNum || amountNum <= 0 || !date) return
+    const txData = { type, amount: amountNum, desc: desc || category || "Lançamento", category: category || "Outro", date }
+    if (editingTransaction) { updateTransaction(editingTransaction.id, txData) } else { addTransaction(txData) }
     onClose()
   }
+
+  const accentColor = type === "income" ? "#16a34a" : "#ED4B00"
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[300]"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose} className="fixed inset-0 z-[300]"
+            style={{ background: "rgba(2,0,53,0.55)", backdropFilter: "blur(6px)" }}
           />
-
           <motion.div
-            initial={{ y: "100%", opacity: 0.5 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0.5 }}
-            transition={{ type: "spring", damping: 35, stiffness: 400 }}
-            style={{ bottom: 0, background: "white", maxHeight: "90dvh", display: "flex", flexDirection: "column" }} className="fixed left-0 right-0 z-[301] rounded-t-3xl"
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed left-0 right-0 z-[301] rounded-t-3xl"
+            style={{ bottom: 0, background: "white", maxHeight: "92dvh", display: "flex", flexDirection: "column" }}
           >
-            {/* Decorative glow */}
-            <div className={`absolute -top-20 left-1/2 -translate-x-1/2 w-60 h-20 rounded-full blur-3xl pointer-events-none ${
-              type === "income" ? "bg-success/20" : "bg-destructive/20"
-            }`} />
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full" style={{ background: "rgba(2,0,53,0.12)" }} />
+            </div>
 
-            <div className="relative p-6 pb-8 overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: "touch" }}>
-              {/* Handle */}
-              <div className="w-10 h-1.5 bg-border rounded-full mx-auto mb-5" />
+            {/* Header fixo */}
+            <div className="flex items-center justify-between px-5 pb-3 flex-shrink-0">
+              <h2 className="text-lg font-bold" style={{ color: "#020035" }}>
+                {editingTransaction ? "Editar lançamento" : "Novo lançamento"}
+              </h2>
+              <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(2,0,53,0.06)" }}>
+                <X className="w-4 h-4" style={{ color: "#020035" }} />
+              </button>
+            </div>
 
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            {/* Toggle tipo — fixo */}
+            <div className="px-5 pb-3 flex-shrink-0">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl" style={{ background: "#F2F3F4" }}>
+                {(["expense", "income"] as const).map(t => (
+                  <button key={t} onClick={() => setType(t)}
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: type === t ? "white" : "transparent",
+                      color: type === t ? (t === "income" ? "#16a34a" : "#ED4B00") : "rgba(2,0,53,0.4)",
+                      boxShadow: type === t ? "0 1px 8px rgba(2,0,53,0.1)" : "none",
+                    }}
                   >
-                    <Sparkles className="w-5 h-5 text-accent" />
-                  </motion.div>
-                  <h2 className="font-heading text-xl font-bold text-foreground">
-                    {editingTransaction ? "Editar" : "Novo Lancamento"}
-                  </h2>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={onClose}
-                  className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border"
-                >
-                  <X className="w-4 h-4" />
-                </motion.button>
+                    {t === "income" ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                    {t === "income" ? "Entrada" : "Saída"}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Type Toggle */}
-              <div className="relative grid grid-cols-2 gap-1 p-1.5 bg-secondary/80 rounded-2xl mb-8">
-                <motion.div
-                  layoutId="type-indicator"
-                  className={`absolute top-1.5 bottom-1.5 w-[calc(50%-4px)] rounded-xl ${
-                    type === "income" ? "bg-success/20 left-1.5" : "bg-destructive/20 right-1.5 left-auto"
-                  }`}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-                <button
-                  onClick={() => setType("income")}
-                  className={`relative flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-xl transition-colors z-10 ${
-                    type === "income" ? "text-success" : "text-muted-foreground"
-                  }`}
-                >
-                  <ArrowUpRight className="w-4 h-4" />
-                  Entrada
-                </button>
-                <button
-                  onClick={() => setType("expense")}
-                  className={`relative flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-xl transition-colors z-10 ${
-                    type === "expense" ? "text-destructive" : "text-muted-foreground"
-                  }`}
-                >
-                  <ArrowDownRight className="w-4 h-4" />
-                  Saida
-                </button>
-              </div>
+            {/* Conteúdo rolável */}
+            <div className="flex-1 overflow-y-auto px-5 pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
 
-              {/* Amount */}
-              <div className="mb-8">
-                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
-                  <span className="w-5 h-5 rounded-md bg-accent/10 flex items-center justify-center">
-                    <span className="text-accent font-bold">R$</span>
-                  </span>
-                  Valor
-                </label>
-                <div className="relative">
-                  <motion.div
-                    animate={{ opacity: amount ? 1 : 0 }}
-                    className={`absolute -inset-1 rounded-2xl blur-sm ${
-                      type === "income" ? "bg-success/20" : "bg-destructive/20"
-                    }`}
-                  />
+              {/* Valor */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(2,0,53,0.45)" }}>Valor</label>
+                <div className="relative rounded-2xl overflow-hidden" style={{ border: `2px solid ${accentColor}30`, background: `${accentColor}06` }}>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: accentColor }}>R$</span>
                   <input
-                    type="number"
-                    inputMode="decimal"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    type="text" inputMode="numeric"
+                    value={amount ? Number(amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : ""}
+                    onChange={e => handleAmount(e.target.value)}
                     placeholder="0,00"
-                    className={`relative w-full font-mono text-5xl font-bold text-center bg-secondary/50 rounded-2xl border-2 py-6 placeholder:text-muted-foreground/30 focus:outline-none transition-all ${
-                      type === "income" 
-                        ? "border-success/30 focus:border-success text-success" 
-                        : "border-destructive/30 focus:border-destructive text-destructive"
-                    }`}
+                    className="w-full pl-12 pr-4 py-4 text-3xl font-bold text-right bg-transparent outline-none"
+                    style={{ color: accentColor }}
                   />
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="mb-5">
-                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                  <FileText className="w-4 h-4" />
-                  Descricao
-                </label>
+              {/* Descrição */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(2,0,53,0.45)" }}>Descrição</label>
                 <input
-                  type="text"
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  placeholder="Ex: Almoco, Salario..."
-                  className="w-full px-4 py-3.5 bg-secondary/50 border-2 border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-accent transition-all"
+                  type="text" value={desc} onChange={e => setDesc(e.target.value)}
+                  placeholder="Ex: Almoço, Salário..."
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                  style={{ background: "#F2F3F4", color: "#020035", border: "1.5px solid rgba(2,0,53,0.08)" }}
                 />
               </div>
 
-              {/* Category */}
-              <div className="mb-5">
-                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
-                  <Tag className="w-4 h-4" />
-                  Categoria
-                </label>
+              {/* Categoria */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(2,0,53,0.45)" }}>Categoria</label>
                 <div className="flex flex-wrap gap-2">
-                  {categories.map((cat, index) => (
-                    <motion.button
-                      key={cat}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.03 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCategory(cat)}
-                      className={`relative px-4 py-2.5 text-xs font-semibold rounded-xl border-2 transition-all ${
-                        category === cat
-                          ? "bg-accent/15 border-accent text-accent"
-                          : "bg-secondary/50 border-border text-muted-foreground hover:border-accent/50"
-                      }`}
+                  {categories.map(cat => (
+                    <button key={cat} onClick={() => setCategory(cat)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                      style={{
+                        background: category === cat ? accentColor : "#F2F3F4",
+                        color: category === cat ? "white" : "rgba(2,0,53,0.6)",
+                      }}
                     >
-                      {category === cat && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full flex items-center justify-center"
-                        >
-                          <Check className="w-2.5 h-2.5 text-accent-foreground" />
-                        </motion.span>
-                      )}
+                      {category === cat && <Check className="w-3 h-3" />}
                       {cat}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Date */}
-              <div className="mb-8">
-                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                  <Calendar className="w-4 h-4" />
-                  Data
-                </label>
+              {/* Data */}
+              <div className="mb-5">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(2,0,53,0.45)" }}>Data</label>
                 <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-secondary/50 border-2 border-border rounded-xl text-foreground focus:outline-none focus:border-accent transition-all"
+                  type="date" value={date} onChange={e => setDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                  style={{ background: "#F2F3F4", color: "#020035", border: "1.5px solid rgba(2,0,53,0.08)" }}
                 />
               </div>
 
-              {/* Submit */}
+              {/* Botão */}
               <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSubmit}
+                whileTap={{ scale: 0.97 }} onClick={handleSubmit}
                 disabled={!amount || parseFloat(amount) <= 0}
-                className="relative w-full py-4 text-base font-bold rounded-2xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-full py-4 rounded-2xl font-bold text-white disabled:opacity-40"
+                style={{ background: accentColor }}
               >
-                {/* Animated gradient */}
-                <motion.div
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                  }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className={`absolute inset-0 bg-[length:200%_100%] ${
-                    type === "income"
-                      ? "bg-gradient-to-r from-success via-accent to-success"
-                      : "bg-gradient-to-r from-accent via-success to-accent"
-                  }`}
-                />
-                <div className="absolute inset-0 shine" />
-                <span className="relative flex items-center justify-center gap-2 text-accent-foreground">
-                  <Sparkles className="w-4 h-4" />
-                  {editingTransaction ? "Atualizar" : "Salvar lancamento"}
-                </span>
+                {editingTransaction ? "Salvar alteração" : "Salvar lançamento"}
               </motion.button>
             </div>
           </motion.div>

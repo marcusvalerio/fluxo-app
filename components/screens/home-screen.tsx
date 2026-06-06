@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from "react"
 import { useFinance } from "@/lib/finance-context"
 import { formatCurrency, getGreeting, formatFullDate } from "@/lib/format"
 import { Shield, Target, PiggyBank, TrendingDown, ChevronRight, Zap } from "lucide-react"
@@ -37,18 +38,8 @@ export function HomeScreen({ onOpenNewTransaction, onOpenLimitModal, onNavigate 
       animate={{ opacity: 1 }}
       className="min-h-screen bg-[#F2F3F4] pb-32"
     >
-      {/* Header */}
-      <div className="px-6 pt-12 pb-6 flex items-start justify-between">
-        <div>
-          <p className="text-[#020035]/50 text-sm mb-0.5 capitalize">
-            {formatFullDate(today)}
-          </p>
-          <h1 className="text-[#020035] text-2xl font-bold leading-tight">
-            {getGreeting()}, {state.user}.
-          </h1>
-        </div>
-        <Logo size={32} showText={false} />
-      </div>
+      {/* Header com motion */}
+      <GreetingHeader user={state.user} today={today} />
 
       <div className="px-6 space-y-4">
         {/* Score de Saúde Financeira */}
@@ -246,5 +237,59 @@ export function HomeScreen({ onOpenNewTransaction, onOpenLimitModal, onNavigate 
         )}
       </div>
     </motion.div>
+  )
+}
+
+
+/* ─── Greeting Header Component ─────────────────────────────────── */
+function GreetingHeader({ user, today }: { user: string; today: Date }) {
+  const hour = today.getHours()
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
+  const greetings = [
+    { range: [5, 12],  label: "Bom dia",   icon: "☀️",  bg: "#FFF8E7", color: "#B45309" },
+    { range: [12, 18], label: "Boa tarde", icon: "🌤️",  bg: "#FFF0E0", color: "#C2410C" },
+    { range: [18, 24], label: "Boa noite", icon: "🌙",  bg: "#EEF0FF", color: "#4338CA" },
+    { range: [0, 5],   label: "Boa noite", icon: "🌙",  bg: "#EEF0FF", color: "#4338CA" },
+  ]
+  const g = greetings.find(({ range }) => hour >= range[0] && hour < range[1]) || greetings[0]
+
+  const itemStyle = (delay: number) => ({
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0px)" : "translateY(14px)",
+    filter: visible ? "blur(0px)" : "blur(6px)",
+    transition: `opacity 0.55s ${delay}s cubic-bezier(0.22,1,0.36,1), transform 0.55s ${delay}s cubic-bezier(0.22,1,0.36,1), filter 0.55s ${delay}s cubic-bezier(0.22,1,0.36,1)`,
+  })
+
+  return (
+    <div className="px-6 pt-12 pb-5 flex items-start justify-between">
+      <div>
+        {/* Badge horário */}
+        <div style={{ ...itemStyle(0), background: g.bg }} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-2">
+          <span className="text-sm leading-none">{g.icon}</span>
+          <span className="text-xs font-semibold" style={{ color: g.color }}>{g.label}</span>
+        </div>
+
+        {/* Nome */}
+        <h1 style={{ ...itemStyle(0.09), color: "#020035", fontSize: "clamp(1.4rem, 6vw, 1.75rem)" }} className="font-bold leading-tight">
+          {user ? `Olá, ${user}.` : "Olá."}
+        </h1>
+
+        {/* Data */}
+        <p style={{ ...itemStyle(0.18), color: "rgba(2,0,53,0.45)" }} className="text-sm mt-0.5 capitalize">
+          {today.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+        </p>
+      </div>
+
+      {/* Logo */}
+      <div style={{ opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.8)", transition: "opacity 0.4s 0.35s ease-out, transform 0.4s 0.35s ease-out" }}>
+        <Logo size={32} showText={false} />
+      </div>
+    </div>
   )
 }
